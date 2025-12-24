@@ -1,28 +1,35 @@
-import {lazy, Suspense} from 'react'
-import {ErrorBoundary, type FallbackProps} from 'react-error-boundary'
-import {Route, Routes} from 'react-router'
-import {LoadingOrError} from '@/components/LoadingOrError'
-// import {Gallery} from '@/pages/Gallery'
-import Home from './pages/Home'
-import Login from './pages/Login'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
+import { AuthProvider } from './store/auth-context';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import AuthGuard from './components/AuthGuard';
+import Login from './pages/Login';
+import ptBR from 'antd/locale/pt_BR';
+import { ConfigProvider } from 'antd';
 
-// const Details = lazy(async () =>
-// 	import('@/pages/Details').then(m => ({default: m.Details}))
-// )
 
-function renderError({error}: FallbackProps) {
-	return <LoadingOrError error={error} />
-}
-
-export function App() {
-	return (
-		<ErrorBoundary fallbackRender={renderError}>
-			<Suspense fallback={<LoadingOrError />}>
-				<Routes>
-					<Route path="/" element={<Login />} />
-					<Route path="/home" element={<Home />} />
-				</Routes>
-			</Suspense>
-		</ErrorBoundary>
-	)
+export default function App() {
+  return (
+		<ConfigProvider locale={ptBR}>
+			<AuthProvider>
+				<BrowserRouter>
+					<Routes>
+						<Route path="/" element={<Navigate to="/login" replace />} />
+						<Route path="/login" element={<Login />} />
+						<Route path="/register" element={<Register />} />
+						<Route
+							path="/home"
+							element={
+								<AuthGuard>
+									<Home />
+								</AuthGuard>
+							}
+						/>
+						<Route path="*" element={<Navigate to="/login" replace />} />
+					</Routes>
+				</BrowserRouter>
+    	</AuthProvider>
+		</ConfigProvider>
+    
+  );
 }

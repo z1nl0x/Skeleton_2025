@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UploadOutlined,
@@ -10,11 +11,15 @@ import { Button, Layout, Menu, theme } from 'antd';
 
 const { Header, Sider, Content } = Layout;
 
+import { useAuth } from '../store/auth-context';
+
 const Home: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  const { signOut, user } = useAuth();
+
 
   return (
     <Layout>
@@ -28,7 +33,7 @@ const Home: React.FC = () => {
             {
               key: '1',
               icon: <UserOutlined />,
-              label: 'nav 1',
+              label: `Usuário: ${user?.user_metadata?.['username'] || user?.email}`,
             },
             {
               key: '2',
@@ -39,6 +44,12 @@ const Home: React.FC = () => {
               key: '3',
               icon: <UploadOutlined />,
               label: 'nav 3',
+            },
+            {
+              key: '3',
+              icon: <LogoutOutlined />,
+              label: 'Sair',
+              onClick: () => signOut()
             },
           ]}
         />
