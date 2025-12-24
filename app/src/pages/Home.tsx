@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LogoutOutlined,
   MenuFoldOutlined,
@@ -15,10 +15,37 @@ import { useAuth } from '../store/auth-context';
 
 const Home: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [pageTitle, setPageTitle] = useState('');
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const { signOut, user } = useAuth();
+
+  const handleMenuClick = (e: { key: string }) => {
+    switch (e.key) {
+      case '1':
+        setPageTitle(`Perfil: ${user?.user_metadata?.['username'] || user?.email}`);
+        break;
+      case '2':
+        setPageTitle('Nav 2');
+        break;
+      case '3':
+        setPageTitle('Nav 3');
+        break;
+      case '4':
+        setPageTitle('Saindo...');
+        break;
+      default:
+        setPageTitle('Titulo da Pagina');
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      const username = user.user_metadata?.['username'] || user.email;
+      setPageTitle(`Perfil: ${username}`);
+    }
+  }, [user]);
 
 
   return (
@@ -29,6 +56,7 @@ const Home: React.FC = () => {
           theme="dark"
           mode="inline"
           defaultSelectedKeys={['1']}
+          onClick={handleMenuClick}
           items={[
             {
               key: '1',
@@ -46,7 +74,7 @@ const Home: React.FC = () => {
               label: 'nav 3',
             },
             {
-              key: '3',
+              key: '4',
               icon: <LogoutOutlined />,
               label: 'Sair',
               onClick: () => signOut()
@@ -55,17 +83,20 @@ const Home: React.FC = () => {
         />
       </Sider>
       <Layout style={{ minHeight: '100vh' }}>
-        <Header style={{ padding: 0, background: colorBgContainer }}>
+        <Header style={{ padding: 0, background: colorBgContainer, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
             style={{
-              fontSize: '16px',
-              width: 64,
-              height: 64,
+              position: 'absolute',
+              left: 16,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: '19px',
             }}
           />
+          <span style={{ fontWeight: 'bold', fontSize: '16px' }}>{pageTitle}</span>
         </Header>
         <Content
           style={{

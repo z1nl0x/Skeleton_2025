@@ -20,7 +20,7 @@ export default function App() {
 						<Route
 							path="/home"
 							element={
-								<AuthGuard>
+								<AuthGuard allowedRoles={['user']}>
 									<Home />
 								</AuthGuard>
 							}
