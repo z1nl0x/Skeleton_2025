@@ -1,8 +1,4 @@
-# Vitamin 2.0
-
-![Test workflow](https://github.com/wtchnm/Vitamin/actions/workflows/test.yml/badge.svg) [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/wtchnm/Vitamin/blob/main/LICENSE)
-
-Opinionated Vite starter template. Previous version available on v1 branch.
+# Vitamin 2.0 Clone App
 
 ## Features
 
@@ -12,29 +8,76 @@ Opinionated Vite starter template. Previous version available on v1 branch.
 - Write unit and integration tests with [Vitest 3](https://vitest.dev/) and [Testing Library 16](https://testing-library.com/).
 - Write e2e tests with [Playwright 1.52](https://www.cypress.io).
 
-## Getting started
+## Iniciando
 
-Use this repository as a [GitHub template](https://github.com/wtchnm/Vitamin/generate) or use [degit](https://github.com/Rich-Harris/degit) to clone to your machine with an empty git history:
-
-```
-npx degit wtchnm/Vitamin#main my-app
-```
-
-Then, install the dependencies:
+Instalação de dependencias do projeto:
 
 ```
 pnpm install
 ```
 
-## Scripts
+## Querys Supabase
 
-- `pnpm dev` - start a development server with hot reload.
-- `pnpm build` - build for production. The generated files will be on the `dist` folder.
-- `pnpm preview` - locally preview the production build.
-- `pnpm test` - run unit and integration tests related to changed files based on git.
-- `pnpm test:ci` - run all unit and integration tests in CI mode.
-- `pnpm test:e2e` - run all e2e tests with Playwright.
-- `pnpm test:e2e:ci` - run all e2e tests headlessly.
-- `pnpm format` - format all files with Biome Formatter.
-- `pnpm lint` - runs TypeScript and Biome.
-- `pnpm validate` - runs `lint`, `test:ci` and `test:e2e:ci`.
+-- Tabela auxiliar de palavras-chave
+create table if not exists public.keywords (
+  id uuid primary key default gen_random_uuid(),
+  keyword text unique not null,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- Extensão pgcrypto (para gen_random_uuid)
+create extension if not exists "pgcrypto";
+
+-- Tabela que associa usuário e palavra-chave
+create table if not exists public.user_keywords (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  keyword_id uuid not null references public.keywords(id) on delete restrict,
+  created_at timestamptz not null default now(),
+  primary key (user_id, keyword_id)
+);
+
+-- RLS: habilitar políticas
+alter table public.keywords enable row level security;
+alter table public.user_keywords enable row level security;
+
+-- Política: todos podem selecionar keywords ativas (para validação no registro)
+create policy "read_active_keywords"
+on public.keywords
+for select
+to authenticated, anon
+using (is_active = true);
+
+-- Política: usuário só pode inserir sua própria associação
+create policy "user_insert_own_assoc"
+on public.user_keywords
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+-- Política: usuário só pode ver suas associações
+create policy "user_select_own_assoc"
+on public.user_keywords
+for select
+to authenticated
+using (user_id = auth.uid());
+
+## Query 02
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text unique not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- Usuário só pode ver/editar seu perfil
+create policy "select_own_profile" on public.profiles for select
+to authenticated using (id = auth.uid());
+
+create policy "insert_own_profile" on public.profiles for insert
+to authenticated with check (id = auth.uid());
+
+create policy "update_own_profile" on public.profiles for update
+to authenticated using (id = auth.uid());
