@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { AuthProvider } from './store/auth-context';
 import Register from './pages/Register';
-import Home from './pages/Home';
 import AuthGuard from './components/AuthGuard';
 import Login from './pages/Login';
 import ptBR from 'antd/locale/pt_BR';
 import { ConfigProvider } from 'antd';
+import SharedPage from './pages/Shared';
 
 
 export default function App() {
@@ -21,7 +21,7 @@ export default function App() {
 							path="/home"
 							element={
 								<AuthGuard allowedRoles={['user']}>
-									<Home />
+									<SharedPage />
 								</AuthGuard>
 							}
 						/>

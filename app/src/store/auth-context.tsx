@@ -7,6 +7,7 @@ type AuthContextValue = {
   role: string | null;
   session: Session | null;
   loading: boolean;
+  roleLoading: boolean;
   signOut: () => Promise<void>;
 };
 
@@ -17,43 +18,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
+  const [roleLoading, setRoleLoading] = useState(false);
 
 
   useEffect(() => {
-    const current = supabase.auth.getSession().then(({ data }) => {
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
-    });
+    };
+
+    init();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      setLoading(false);
     });
 
     return () => {
       sub.subscription.unsubscribe();
     };
+
   }, []);
 
   useEffect(() => {
-    if (user) {
-      supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-        .then(({ data, error }) => {
-          if (!error && data) {
-            console.log(data.role)
-            setRole(data.role);
-          } else {
-            setRole(null);
-          }
-        });
-    } else {
-      setRole(null);
-    }
+    const fetchRole = async () => {
+      if (!user) {
+        setRole(null);
+        return;
+      }
+
+      setRoleLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (!error && data) {
+          setRole(data.role);
+        } else {
+          setRole(null);
+        }
+      } finally {
+        setRoleLoading(false);
+      }
+    };
+
+    fetchRole();
   }, [user]);
 
 
@@ -62,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, role, session, loading, roleLoading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
@@ -70,6 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth deve ser utilizado dentro de AuthProvider');
+  if (!ctx) throw new Error();
   return ctx;
 }

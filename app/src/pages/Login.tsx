@@ -15,7 +15,7 @@ export default function Login() {
 
   const onFinish = async ({ email, password }: LoginValues) => {
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error, session } = await signIn(email, password);
     setLoading(false);
 
     if (error) {
@@ -23,7 +23,10 @@ export default function Login() {
       return;
     }
 
-    navigate('/home', { replace: true });
+    if (session) {
+      navigate('/home', { replace: true });
+    }
+
   };
 
   return (
