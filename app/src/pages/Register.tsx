@@ -1,8 +1,8 @@
-import { Form, Input, Button, message } from 'antd';
-import { useNavigate } from 'react-router';
-import AuthLayout from '../components/AuthLayout';
-import { signUpWithKeyword } from '../services/auth';
-import { useState } from 'react';
+import { Button, Form, Input, message } from "antd";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import AuthLayout from "../components/AuthLayout";
+import { signUpWithKeyword } from "../services/auth";
 
 type RegisterValues = {
   email: string;
@@ -20,21 +20,22 @@ export default function Register() {
     const { email, password, username, keyword } = values;
 
     const { error } = await signUpWithKeyword(email, password, username, keyword);
+
     setLoading(false);
 
     if (error) {
       message.error(error.message);
       return;
+    } else {
+      message.success("Registro efetuado! Faça login para continuar.");
+      navigate("/login");
     }
-
-    message.success('Registro efetuado! Faça login para continuar.');
-    navigate('/login');
   };
 
   return (
     <AuthLayout>
       <Form layout="vertical" onFinish={onFinish}>
-        <Form.Item label="Email" name="email" rules={[{ required: true, type: 'email' }]}>
+        <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
           <Input />
         </Form.Item>
         <Form.Item label="Username" name="username" rules={[{ required: true, min: 3 }]}>
@@ -49,7 +50,7 @@ export default function Register() {
         <Button type="primary" htmlType="submit" loading={loading} block>
           Registrar
         </Button>
-        <Button type="link" onClick={() => navigate('/login')} block>
+        <Button type="link" onClick={() => navigate("/login")} block>
           Já tenho conta
         </Button>
       </Form>

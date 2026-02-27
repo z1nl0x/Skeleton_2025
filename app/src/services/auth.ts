@@ -1,24 +1,18 @@
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
 export async function findActiveKeyword(keyword: string) {
   return supabase
-    .from('keywords')
-    .select('id, keyword, is_active')
-    .eq('keyword', keyword)
-    .eq('is_active', true)
+    .from("keywords")
+    .select("id, keyword, is_active")
+    .eq("keyword", keyword)
+    .eq("is_active", true)
     .single();
 }
 
-export async function signUpWithKeyword(
-  email: string,
-  password: string,
-  username: string,
-  keyword: string
-) {
-
+export async function signUpWithKeyword(email: string, password: string, username: string, keyword: string) {
   const { data: kw, error: kwError } = await findActiveKeyword(keyword);
   if (kwError || !kw) {
-    return { error: new Error('Palavra-chave inválida ou inativa.') };
+    return { error: new Error("Palavra-chave inválida ou inativa.") };
   }
 
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -29,23 +23,25 @@ export async function signUpWithKeyword(
     },
   });
   if (signUpError || !signUpData.user) {
-    return { error: signUpError ?? new Error('Falha ao registrar usuário.') };
+    return { error: signUpError ?? new Error("Falha ao registrar usuário.") };
   }
 
   const userId = signUpData.user.id;
 
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert({ id: userId, username });
+  const { error: profileError } = await supabase.from("profiles").insert({ id: userId, username });
   if (profileError) {
-    return { error: new Error('Falha ao criar perfil!') };
+    return { error: new Error("Falha ao criar perfil!") };
   }
 
-  const { error: assocError } = await supabase
-    .from('user_keywords')
-    .insert({ user_id: userId, keyword_id: kw.id });
+  const { error: assocError } = await supabase.from("user_keywords").insert({ user_id: userId, keyword_id: kw.id });
   if (assocError) {
-    return { error: new Error('Falha ao associar a palavra-chave ao usuário.') };
+    return { error: new Error("Falha ao associar a palavra-chave ao usuário.") };
+  }
+
+  const { error: updateError } = await supabase.from("keywords").update({ is_active: false }).eq("id", kw.id);
+
+  if (updateError) {
+    console.error("Erro ao desativar palavra chave:", updateError);
   }
 
   return { user: signUpData.user };
